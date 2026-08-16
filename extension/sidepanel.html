@@ -5,13 +5,12 @@
   <style>
     body { font-family: system-ui, sans-serif; padding: 12px; margin: 0; background: #f8f9fa; }
     .card { background: white; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
-    .metric { font-size: 24px; font-weight: bold; color: #1a73e8; }
-    .alert { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px; border-radius: 6px; }
-    button { background: #1a73e8; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 4px; }
+    .metric { font-weight: bold; color: #1a73e8; }
+    button { background: #1a73e8; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 6px; }
     button:hover { background: #1557b0; }
-    textarea, input { width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    textarea, input { width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
     .hidden { display: none; }
-    #chatLog { height: 180px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px; background: #fafafa; margin-bottom: 8px; font-size: 13px; }
+    #chatLog { height: 160px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px; background: #fafafa; margin-bottom: 8px; font-size: 13px; }
     .chat-msg { margin-bottom: 8px; }
     .chat-user { color: #1a73e8; font-weight: bold; }
     .chat-ai { color: #2e7d32; }
@@ -21,45 +20,30 @@
 </head>
 <body>
   <div class="card">
-    <h4>1. Learning and Rules Setup</h4>
-    <button id="btnTeachEntry" style="background: #5c6bc0;">Analyze and Teach First Entry</button>
+    <h4>1. Teach LLM By Example</h4>
+    <p>Saved Teaching Examples: <span id="exampleCount" class="metric">0</span></p>
+    <button id="btnCaptureExample" style="background: #6f42c1;">1. Analyze Current Screen Entry</button>
     
-    <div id="teachingReview" class="hidden" style="margin-top: 10px;">
-      <strong>Extracted Fields Review:</strong>
-      <pre id="extractedPreview" style="background: #f1f3f4; padding: 8px; border-radius: 4px; font-size: 11px; max-height: 120px; overflow-y: auto;"></pre>
-      
-      <label style="font-size: 12px; font-weight: bold;">Custom Layout / Binding Rules:</label>
-      <textarea id="layoutPrompt" placeholder="E.g., Field 'Event Day' is on line 2..."></textarea>
-      
-      <button id="btnApproveTakeover" style="background: #2e7d32;">Approve Rules and Grant Control</button>
+    <div id="learningBox" class="hidden" style="margin-top: 10px;">
+      <label>Verify / Correct Extracted Fields (JSON format):</label>
+      <textarea id="exampleFieldsJson" rows="6"></textarea>
+      <button id="btnSaveExample" style="background: #2e7d32;">2. Save as Teaching Example</button>
     </div>
   </div>
 
   <div class="card">
-    <h4>2. Automation Status</h4>
-    <p>Completed Entries: <span id="metricCompleted" class="metric">0</span></p>
-    <button id="btnStartBatch" class="hidden">Start Automation Batch</button>
-  </div>
-
-  <div id="guidanceModal" class="card alert hidden">
-    <h4>Assistance Required (Confidence below 90%)</h4>
-    <p id="guidanceReason"></p>
-    <label>Format / Image Layout Explanation:</label>
-    <textarea id="formatExplanation" placeholder="Explain column bindings..."></textarea>
-    
-    <label>Spanish Dictionary Addition:</label>
-    <input type="text" id="dictCorrection" placeholder="Type unknown word correctly...">
-
-    <button id="btnSaveAndResume">Save Rules and Resume Entry</button>
+    <h4>2. Run Auto-Indexing with Learned Logic</h4>
+    <button id="btnStartAuto">Run Auto-Pilot Entry</button>
+    <button id="btnClearMemory" style="background: #dc3545; margin-top: 4px;">Clear Learned Memory</button>
   </div>
 
   <div class="card">
-    <h4>3. Document Chat and Vision Q and A</h4>
+    <h4>3. Interactive LLM Assistant Chat</h4>
     <div id="chatLog">
-      <div class="chat-msg chat-ai"><strong>Assistant:</strong> Ask me anything about the Spanish document visible on your screen.</div>
+      <div class="chat-msg chat-ai"><strong>Assistant:</strong> Ask me to explain any sentence, transcribe handwriting, or extract specific dates from this document.</div>
     </div>
     <div class="chat-box">
-      <input type="text" id="chatInput" placeholder="Ask about this entry..." />
+      <input type="text" id="chatInput" placeholder="Ask LLM about this document..." />
       <button id="btnSendChat" style="width: auto;">Send</button>
     </div>
   </div>
