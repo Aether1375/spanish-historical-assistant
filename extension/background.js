@@ -1,4 +1,4 @@
-const VERCEL_API_URL = "https://your-vercel-app.vercel.app/api/process-entry";
+const VERCEL_API_URL = "https://spanish-historical-assistant.vercel.app/api/process-entry";
 
 class EntryQueue {
   constructor(concurrency = 3) {
