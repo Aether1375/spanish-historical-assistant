@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 12px; margin: 0; background: #f8f9fa; }
+    .card { background: white; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
+    .metric { font-size: 24px; font-weight: bold; color: #1a73e8; }
+    .alert { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px; border-radius: 6px; }
+    button { background: #1a73e8; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; }
+    textarea, input { width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 8px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h3>Historical Assistant</h3>
+    <p>Completed Entries: <span id="metricCompleted" class="metric">0</span></p>
+  </div>
+
+  <div id="guidanceModal" class="card alert hidden">
+    <h4>Assistance Required (<90% Confidence)</h4>
+    <p id="guidanceReason"></p>
+    <label>Format / Image Layout Explanation:</label>
+    <textarea id="formatExplanation" placeholder="Explain column bindings (e.g. Column 1 is Folio, Column 2 is Bautizado)..."></textarea>
+    
+    <label>Spanish Dictionary Addition:</label>
+    <input type="text" id="dictCorrection" placeholder="Type unknown word correctly...">
+
+    <button id="btnSaveAndResume">Save Rules & Resume Entry</button>
+  </div>
+
+  <div class="card">
+    <button id="btnStartBatch">Start Automation Batch</button>
+  </div>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>

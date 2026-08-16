@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Spanish Historical Index Assistant",
+  "version": "1.0.0",
+  "description": "High-speed AI vision assistant for Spanish historical record indexing.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "sidePanel",
+    "storage",
+    "offscreen"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  }
+}
