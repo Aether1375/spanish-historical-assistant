@@ -8,7 +8,8 @@
     "scripting",
     "sidePanel",
     "storage",
-    "offscreen"
+    "offscreen",
+    "<all_urls>"
   ],
   "host_permissions": [
     "<all_urls>"

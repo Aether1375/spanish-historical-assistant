@@ -15,6 +15,37 @@ chrome.runtime.onMessage.addListener((msg) => {
   }
 });
 
+// Step 1: Analyze & Teach First Entry
+document.getElementById("btnTeachEntry").addEventListener("click", async () => {
+  const preview = document.getElementById("extractedPreview");
+  const reviewBox = document.getElementById("teachingReview");
+  preview.innerText = "Scanning page and testing extraction...";
+  reviewBox.classList.remove("hidden");
+
+  chrome.runtime.sendMessage({ action: "TEACH_ENTRY" }, (response) => {
+    if (response && response.fields) {
+      preview.innerText = JSON.stringify(response.fields, null, 2);
+    } else {
+      preview.innerText = "Error: " + (response?.error || "Could not extract fields.");
+    }
+  });
+});
+
+// Step 2: Approve Rules & Enable Batch Control
+document.getElementById("btnApproveTakeover").addEventListener("click", async () => {
+  const customRules = document.getElementById("layoutPrompt").value;
+  
+  await chrome.storage.local.set({ formatPrompt: customRules });
+  
+  alert("Rules saved! Automation batch control is now authorized.");
+  document.getElementById("btnStartBatch").classList.remove("hidden");
+});
+
+// Step 3: Run Authorized Batch Processing
+document.getElementById("btnStartBatch").addEventListener("click", () => {
+  chrome.runtime.sendMessage({ action: "START_BATCH", tasks: [{}, {}, {}] });
+});
+
 // Resume Batch Event
 document.getElementById("btnSaveAndResume").addEventListener("click", async () => {
   const explanation = document.getElementById("formatExplanation").value;
@@ -34,11 +65,6 @@ document.getElementById("btnSaveAndResume").addEventListener("click", async () =
   chrome.runtime.sendMessage({ action: "RESUME_BATCH" });
 });
 
-// Start Batch Event
-document.getElementById("btnStartBatch").addEventListener("click", () => {
-  chrome.runtime.sendMessage({ action: "START_BATCH", tasks: [{}, {}, {}] });
-});
-
 // Chat Event Handlers
 document.getElementById("btnSendChat").addEventListener("click", sendChatMessage);
 document.getElementById("chatInput").addEventListener("keypress", (e) => {
@@ -56,9 +82,10 @@ async function sendChatMessage() {
   appendMessage("Assistant", "Analyzing document...", "chat-ai");
 
   chrome.runtime.sendMessage({ action: "CHAT_QUERY", query: text }, (response) => {
-    // Remove "Analyzing document..." loading placeholder
     const chatLog = document.getElementById("chatLog");
-    chatLog.removeChild(chatLog.lastChild);
+    if (chatLog.lastChild) {
+      chatLog.removeChild(chatLog.lastChild);
+    }
 
     if (response && response.result) {
       appendMessage("Assistant", response.result, "chat-ai");

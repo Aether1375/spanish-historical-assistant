@@ -1,7 +1,5 @@
-// Register exact hotkeys: F5-F8, Alt+/, Alt+., Alt+,
 document.addEventListener("keydown", (e) => {
   if (["F5", "F6", "F7", "F8"].includes(e.key)) {
-    // Intercept default browser actions like page refresh
     e.preventDefault();
   }
 
@@ -12,15 +10,15 @@ document.addEventListener("keydown", (e) => {
 
   if (e.altKey && e.key === "/") {
     e.preventDefault();
-    dispatchSyntheticKey("/", 191, { altKey: true }); // Preview Next Image
+    dispatchSyntheticKey("/", 191, { altKey: true });
   }
   if (e.altKey && e.key === ".") {
     e.preventDefault();
-    dispatchSyntheticKey(".", 190, { altKey: true }); // Return to Current Entry Image
+    dispatchSyntheticKey(".", 190, { altKey: true });
   }
   if (e.altKey && e.key === ",") {
     e.preventDefault();
-    dispatchSyntheticKey(",", 188, { altKey: true }); // Preview Previous Image
+    dispatchSyntheticKey(",", 188, { altKey: true });
   }
 });
 
@@ -37,7 +35,6 @@ function dispatchSyntheticKey(key, keyCode, modifiers = {}) {
   document.dispatchEvent(event);
 }
 
-// Fast DOM Field Injector
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.action === "FILL_ENTRY") {
     const fields = msg.fields;

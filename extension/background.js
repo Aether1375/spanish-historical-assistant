@@ -21,16 +21,15 @@ class EntryQueue {
     const task = this.queue.shift();
 
     try {
-      // 1. Get active tab & capture screen
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (!tab) throw new Error("No active tab found");
+      const dataUrl = await new Promise((resolve, reject) => {
+        chrome.tabs.captureVisibleTab(null, { format: "jpeg", quality: 60 }, (data) => {
+          if (chrome.runtime.lastError) return reject(chrome.runtime.lastError);
+          resolve(data);
+        });
+      });
 
-      const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "jpeg", quality: 60 });
-
-      // 2. Query stored layout memory
       const memory = await chrome.storage.local.get(["formatPrompt", "spanishDictionary"]);
 
-      // 3. Request vision analysis from Vercel
       const response = await fetch(VERCEL_API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -43,15 +42,16 @@ class EntryQueue {
 
       const result = await response.json();
 
-      // 4. Check guidance triggers: format ambiguity or <90% confidence score
       if (result.needsAssistance || result.confidenceScore < 90) {
         this.isPaused = true;
         chrome.runtime.sendMessage({ action: "PAUSE_FOR_GUIDANCE", data: result });
         return;
       }
 
-      // 5. Inject fields into DOM
-      await chrome.tabs.sendMessage(tab.id, { action: "FILL_ENTRY", fields: result.fields });
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab) {
+        await chrome.tabs.sendMessage(tab.id, { action: "FILL_ENTRY", fields: result.fields });
+      }
 
       this.completedCount++;
       chrome.runtime.sendMessage({ action: "UPDATE_METRICS", completed: this.completedCount });
@@ -77,12 +77,44 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     msg.tasks.forEach(task => queueManager.enqueue(task));
   } else if (msg.action === "RESUME_BATCH") {
     queueManager.resume();
-  } else if (msg.action === "CHAT_QUERY") {
-    // Handle Interactive LLM Chat
+  } else if (msg.action === "TEACH_ENTRY") {
     (async () => {
       try {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "jpeg", quality: 60 });
+        const dataUrl = await new Promise((resolve, reject) => {
+          chrome.tabs.captureVisibleTab(null, { format: "jpeg", quality: 60 }, (data) => {
+            if (chrome.runtime.lastError) return reject(chrome.runtime.lastError);
+            resolve(data);
+          });
+        });
+
+        const memory = await chrome.storage.local.get(["formatPrompt", "spanishDictionary"]);
+
+        const response = await fetch(VERCEL_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            imageBase64: dataUrl,
+            userMemoryPrompt: memory.formatPrompt || "",
+            spanishDictionary: memory.spanishDictionary || []
+          })
+        });
+
+        const data = await response.json();
+        sendResponse(data);
+      } catch (err) {
+        sendResponse({ error: err.message });
+      }
+    })();
+    return true;
+  } else if (msg.action === "CHAT_QUERY") {
+    (async () => {
+      try {
+        const dataUrl = await new Promise((resolve, reject) => {
+          chrome.tabs.captureVisibleTab(null, { format: "jpeg", quality: 60 }, (data) => {
+            if (chrome.runtime.lastError) return reject(chrome.runtime.lastError);
+            resolve(data);
+          });
+        });
 
         const response = await fetch(VERCEL_API_URL, {
           method: "POST",
@@ -99,6 +131,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         sendResponse({ error: err.message });
       }
     })();
-    return true; // Asynchronous sendResponse
+    return true;
   }
 });

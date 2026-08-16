@@ -22,14 +22,14 @@ module.exports = async (req, res) => {
       inlineData: { mimeType: "image/jpeg", data: cleanBase64 }
     };
 
-    // Chat Mode
+    // Conversational Q and A Mode
     if (prompt) {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       const result = await model.generateContent([prompt, imagePart]);
       return res.status(200).json({ result: result.response.text() });
     }
 
-    // Automated Batch Mode
+    // Structured Indexing Mode
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
       generationConfig: { responseMimeType: "application/json" }
@@ -64,6 +64,11 @@ If handwriting is illegible or formatting is ambiguous, set confidenceScore belo
 
   } catch (error) {
     console.error("Backend Error:", error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({
+      confidenceScore: 0,
+      needsAssistance: true,
+      unrecognizedWords: ["API_ERROR"],
+      fields: {}
+    });
   }
 };
