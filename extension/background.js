@@ -1,20 +1,24 @@
 const VERCEL_API_URL = "https://spanish-historical-assistant.vercel.app/api/process-entry";
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  
+
   if (msg.action === "SAVE_EXEMPLAR") {
     (async () => {
-      const dataUrl = await captureScreen();
-      const storage = await chrome.storage.local.get(["exemplars"]);
-      const exemplars = storage.exemplars || [];
-      
-      exemplars.push({
-        image: dataUrl,
-        fields: msg.verifiedFields
-      });
+      try {
+        const dataUrl = await captureScreen();
+        const storage = await chrome.storage.local.get(["exemplars"]);
+        const exemplars = storage.exemplars || [];
 
-      await chrome.storage.local.set({ exemplars });
-      sendResponse({ success: true });
+        exemplars.push({
+          image: dataUrl,
+          fields: msg.verifiedFields
+        });
+
+        await chrome.storage.local.set({ exemplars });
+        sendResponse({ success: true });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message });
+      }
     })();
     return true;
   }
@@ -34,8 +38,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           })
         });
 
+        if (!response.ok) {
+          const errText = await response.text();
+          return sendResponse({ error: `Vercel HTTP ${response.status}: ${errText.substring(0, 100)}` });
+        }
+
         const data = await response.json();
-        
+
         if (msg.action === "START_BATCH" && data.fields) {
           const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
           if (tab) {
@@ -64,6 +73,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           })
         });
 
+        if (!response.ok) {
+          const errText = await response.text();
+          return sendResponse({ error: `Vercel HTTP ${response.status}: ${errText.substring(0, 100)}` });
+        }
+
         const data = await response.json();
         sendResponse({ result: data.result });
       } catch (err) {
@@ -76,7 +90,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
 function captureScreen() {
   return new Promise((resolve, reject) => {
-    chrome.tabs.captureVisibleTab(null, { format: "jpeg", quality: 60 }, (data) => {
+    chrome.tabs.captureVisibleTab(null, { format: "jpeg", quality: 30 }, (data) => {
       if (chrome.runtime.lastError) return reject(chrome.runtime.lastError);
       resolve(data);
     });
