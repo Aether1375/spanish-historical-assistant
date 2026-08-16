@@ -3,51 +3,30 @@
 <head>
   <meta charset="utf-8">
   <style>
-    body { font-family: system-ui, sans-serif; padding: 12px; margin: 0; background: #f8f9fa; }
-    .card { background: white; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
-    .metric { font-weight: bold; color: #1a73e8; }
-    button { background: #1a73e8; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 6px; }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { margin: 0; padding: 12px; height: 100vh; display: flex; flex-direction: column; background: #f8f9fa; }
+    h3 { margin: 0 0 10px 0; font-size: 15px; color: #202124; display: flex; align-items: center; gap: 6px; }
+    #chatContainer { flex: 1; overflow-y: auto; border: 1px solid #dadce0; background: #ffffff; border-radius: 8px; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .msg { padding: 8px 12px; border-radius: 8px; font-size: 13px; max-width: 85%; line-height: 1.4; word-wrap: break-word; }
+    .msg-user { background: #1a73e8; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+    .msg-ai { background: #f1f3f4; color: #202124; align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid #e8eaed; }
+    .msg-system { background: #e8f0fe; color: #174ea6; font-size: 12px; text-align: center; align-self: center; border-radius: 12px; padding: 4px 10px; }
+    #inputBox { display: flex; gap: 6px; }
+    textarea { flex: 1; height: 42px; border: 1px solid #dadce0; border-radius: 6px; padding: 8px; font-size: 13px; resize: none; outline: none; }
+    textarea:focus { border-color: #1a73e8; }
+    button { background: #1a73e8; color: white; border: none; border-radius: 6px; padding: 0 16px; font-weight: bold; cursor: pointer; }
     button:hover { background: #1557b0; }
-    textarea, input { width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
-    .hidden { display: none; }
-    #chatLog { height: 160px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px; background: #fafafa; margin-bottom: 8px; font-size: 13px; }
-    .chat-msg { margin-bottom: 8px; }
-    .chat-user { color: #1a73e8; font-weight: bold; }
-    .chat-ai { color: #2e7d32; }
-    .chat-box { display: flex; gap: 6px; }
-    .chat-box input { margin-bottom: 0; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h4>1. Teach LLM By Example</h4>
-    <p>Saved Teaching Examples: <span id="exampleCount" class="metric">0</span></p>
-    <button id="btnCaptureExample" style="background: #6f42c1;">1. Analyze Current Screen Entry</button>
-    
-    <div id="learningBox" class="hidden" style="margin-top: 10px;">
-      <label>Verify / Correct Extracted Fields (JSON format):</label>
-      <textarea id="exampleFieldsJson" rows="6"></textarea>
-      <button id="btnSaveExample" style="background: #2e7d32;">2. Save as Teaching Example</button>
-    </div>
+  <h3>Spanish Indexing Assistant</h3>
+  <div id="chatContainer">
+    <div class="msg msg-ai">Hello! Show me your Spanish record image on screen and teach me line-by-line or paragraph-by-paragraph. Once I understand your layout rules, I'll ask permission to take over auto-indexing for you.</div>
   </div>
-
-  <div class="card">
-    <h4>2. Run Auto-Indexing with Learned Logic</h4>
-    <button id="btnStartAuto">Run Auto-Pilot Entry</button>
-    <button id="btnClearMemory" style="background: #dc3545; margin-top: 4px;">Clear Learned Memory</button>
+  <div id="inputBox">
+    <textarea id="chatInput" placeholder="Teach line-by-line, or reply to assistant..."></textarea>
+    <button id="btnSend">Send</button>
   </div>
-
-  <div class="card">
-    <h4>3. Interactive LLM Assistant Chat</h4>
-    <div id="chatLog">
-      <div class="chat-msg chat-ai"><strong>Assistant:</strong> Ask me to explain any sentence, transcribe handwriting, or extract specific dates from this document.</div>
-    </div>
-    <div class="chat-box">
-      <input type="text" id="chatInput" placeholder="Ask LLM about this document..." />
-      <button id="btnSendChat" style="width: auto;">Send</button>
-    </div>
-  </div>
-
   <script src="sidepanel.js"></script>
 </body>
 </html>
