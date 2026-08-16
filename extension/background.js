@@ -21,8 +21,11 @@ class EntryQueue {
     const task = this.queue.shift();
 
     try {
-      // 1. Capture screen
-      const dataUrl = await chrome.tabs.captureVisibleTab(null, { format: "jpeg", quality: 60 });
+      // 1. Get active tab & capture screen
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab) throw new Error("No active tab found");
+
+      const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "jpeg", quality: 60 });
 
       // 2. Query stored layout memory
       const memory = await chrome.storage.local.get(["formatPrompt", "spanishDictionary"]);
@@ -48,7 +51,6 @@ class EntryQueue {
       }
 
       // 5. Inject fields into DOM
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       await chrome.tabs.sendMessage(tab.id, { action: "FILL_ENTRY", fields: result.fields });
 
       this.completedCount++;
@@ -75,5 +77,28 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     msg.tasks.forEach(task => queueManager.enqueue(task));
   } else if (msg.action === "RESUME_BATCH") {
     queueManager.resume();
+  } else if (msg.action === "CHAT_QUERY") {
+    // Handle Interactive LLM Chat
+    (async () => {
+      try {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "jpeg", quality: 60 });
+
+        const response = await fetch(VERCEL_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            imageBase64: dataUrl,
+            prompt: msg.query
+          })
+        });
+
+        const data = await response.json();
+        sendResponse({ result: data.result || JSON.stringify(data.fields) });
+      } catch (err) {
+        sendResponse({ error: err.message });
+      }
+    })();
+    return true; // Asynchronous sendResponse
   }
 });

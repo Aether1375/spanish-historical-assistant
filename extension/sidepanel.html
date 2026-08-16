@@ -7,22 +7,32 @@
     .card { background: white; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
     .metric { font-size: 24px; font-weight: bold; color: #1a73e8; }
     .alert { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px; border-radius: 6px; }
-    button { background: #1a73e8; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; }
-    textarea, input { width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 8px; }
+    button { background: #1a73e8; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 4px; }
+    button:hover { background: #1557b0; }
+    textarea, input { width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
     .hidden { display: none; }
+    
+    /* Chat UI Styles */
+    #chatLog { height: 180px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px; background: #fafafa; margin-bottom: 8px; font-size: 13px; }
+    .chat-msg { margin-bottom: 8px; }
+    .chat-user { color: #1a73e8; font-weight: bold; }
+    .chat-ai { color: #2e7d32; }
+    .chat-box { display: flex; gap: 6px; }
+    .chat-box input { margin-bottom: 0; }
   </style>
 </head>
 <body>
   <div class="card">
     <h3>Historical Assistant</h3>
     <p>Completed Entries: <span id="metricCompleted" class="metric">0</span></p>
+    <button id="btnStartBatch">Start Automation Batch</button>
   </div>
 
   <div id="guidanceModal" class="card alert hidden">
     <h4>Assistance Required (<90% Confidence)</h4>
     <p id="guidanceReason"></p>
     <label>Format / Image Layout Explanation:</label>
-    <textarea id="formatExplanation" placeholder="Explain column bindings (e.g. Column 1 is Folio, Column 2 is Bautizado)..."></textarea>
+    <textarea id="formatExplanation" placeholder="Explain column bindings..."></textarea>
     
     <label>Spanish Dictionary Addition:</label>
     <input type="text" id="dictCorrection" placeholder="Type unknown word correctly...">
@@ -30,8 +40,16 @@
     <button id="btnSaveAndResume">Save Rules & Resume Entry</button>
   </div>
 
+  <!-- Interactive Document Chat Card -->
   <div class="card">
-    <button id="btnStartBatch">Start Automation Batch</button>
+    <h4>Document Chat & Vision Q&A</h4>
+    <div id="chatLog">
+      <div class="chat-msg chat-ai"><strong>Assistant:</strong> Ask me anything about the Spanish document visible on your screen!</div>
+    </div>
+    <div class="chat-box">
+      <input type="text" id="chatInput" placeholder="Ask about this entry..." />
+      <button id="btnSendChat" style="width: auto;">Send</button>
+    </div>
   </div>
 
   <script src="sidepanel.js"></script>
