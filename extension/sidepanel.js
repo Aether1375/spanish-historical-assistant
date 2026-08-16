@@ -10,6 +10,21 @@ chatInput.addEventListener("keydown", (e) => {
   }
 });
 
+// Trigger Gemini live greeting on panel open
+initGeminiGreeting();
+
+function initGeminiGreeting() {
+  const loadingDiv = appendMessage("ai", "Connecting and reading current screen image...");
+  chrome.runtime.sendMessage({ action: "INIT_CHAT" }, (response) => {
+    loadingDiv.remove();
+    if (response && response.reply) {
+      appendMessage("ai", response.reply);
+    } else {
+      appendMessage("ai", "Error: " + (response?.error || "Could not connect to Gemini server."));
+    }
+  });
+}
+
 async function sendMessage() {
   const text = chatInput.value.trim();
   if (!text) return;
@@ -28,7 +43,7 @@ async function sendMessage() {
         appendMessage("system", "Form fields auto-filled successfully!");
       }
     } else {
-      appendMessage("ai", "Error: " + (response?.error || "Unable to reach assistant server."));
+      appendMessage("ai", "Error: " + (response?.error || "Unable to reach server."));
     }
   });
 }
