@@ -1,4 +1,7 @@
+// 1. Prevent infinite recursion on synthetic shortcut dispatching
 document.addEventListener("keydown", (e) => {
+  if (!e.isTrusted) return; // Ignore synthetic events created by extension
+
   if (["F5", "F6", "F7", "F8"].includes(e.key)) {
     e.preventDefault();
   }
@@ -35,22 +38,78 @@ function dispatchSyntheticKey(key, keyCode, modifiers = {}) {
   document.dispatchEvent(event);
 }
 
+// 2. Safe multi-framework auto-filler for indexing forms
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.action === "FILL_ENTRY") {
-    const fields = msg.fields;
+    const fields = msg.fields || {};
+    let filledCount = 0;
 
-    Object.entries(fields).forEach(([key, val]) => {
-      const input = document.querySelector(`input[name*="${key}" i], input[id*="${key}" i]`);
-      if (input) {
-        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-        setter.call(input, val);
+    const elements = Array.from(
+      document.querySelectorAll("input:not([type='hidden']), textarea, select")
+    );
 
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-        input.dispatchEvent(new Event("change", { bubbles: true }));
-        input.dispatchEvent(new Event("blur", { bubbles: true }));
+    Object.entries(fields).forEach(([rawKey, val]) => {
+      if (val === null || val === undefined) return;
+
+      const target = findMatchingElement(elements, rawKey);
+      if (target) {
+        setNativeValue(target, String(val));
+        filledCount++;
       }
     });
 
-    sendResponse({ status: "SUCCESS" });
+    sendResponse({ status: "SUCCESS", filledCount });
   }
+  return true;
 });
+
+// Normalized matching for name, id, placeholder, aria-label, and <label> text
+function findMatchingElement(elements, rawKey) {
+  const normKey = rawKey.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (!normKey) return null;
+
+  return elements.find((el) => {
+    const id = (el.id || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const name = (el.name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const placeholder = (el.placeholder || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const ariaLabel = (el.getAttribute("aria-label") || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    
+    let labelText = "";
+    if (el.id) {
+      const lbl = document.querySelector(`label[for="${CSS.escape(el.id)}"]`);
+      if (lbl) labelText = lbl.textContent.toLowerCase().replace(/[^a-z0-9]/g, "");
+    }
+
+    return (
+      id.includes(normKey) ||
+      (id.length > 2 && normKey.includes(id)) ||
+      name.includes(normKey) ||
+      (name.length > 2 && normKey.includes(name)) ||
+      placeholder.includes(normKey) ||
+      ariaLabel.includes(normKey) ||
+      labelText.includes(normKey)
+    );
+  });
+}
+
+// Prototype value injector compatible with React, Angular, and vanilla web forms
+function setNativeValue(element, value) {
+  let prototype = window.HTMLInputElement.prototype;
+  if (element instanceof HTMLTextAreaElement) {
+    prototype = window.HTMLTextAreaElement.prototype;
+  } else if (element instanceof HTMLSelectElement) {
+    prototype = window.HTMLSelectElement.prototype;
+  }
+
+  const descriptor = Object.getOwnPropertyDescriptor(prototype, "value");
+  if (descriptor && descriptor.set) {
+    descriptor.set.call(element, value);
+  } else {
+    element.value = value;
+  }
+
+  element.dispatchEvent(new Event("focus", { bubbles: true }));
+  element.dispatchEvent(new Event("input", { bubbles: true }));
+  element.dispatchEvent(new Event("change", { bubbles: true }));
+  element.dispatchEvent(new Event("blur", { bubbles: true }));
+}
